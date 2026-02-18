@@ -1,99 +1,93 @@
 # Primary Layer 2 UDN
 
-## Introduction
+# Layer2 UDN - User Defined Network
 
-In OpenShift Virtualization, User-Defined Networking (UDN) enables you to move beyond the default pod network and create custom network configurations for your virtual machines. A Primary Layer 2 UDN represents the foundational building block of custom networking—a simple, bridge-based network that operates at the data link layer (Layer 2 of the OSI model).
+## Overview
 
-Primary Layer 2 UDNs are implemented using the [Kubernetes Network Plumbing Working Group's Network Custom Resource Definition De-facto Standard](https://github.com/k8snetworkplumbingwg/multi-net-spec), which defines how additional networks are attached to pods and VMs through `NetworkAttachmentDefinition` resources. These definitions are managed by Multus CNI, a meta-plugin that enables multiple network interfaces in Kubernetes.
+Layer2 UDN (User Defined Network) is a network configuration that creates a single logical switch shared by all nodes in the cluster. This allows pods on different nodes to appear as if they are on the same Layer2 network segment.
 
-In OpenShift with OVN-Kubernetes, when you create a Layer 2 UDN, the underlying network infrastructure (including bridges and virtual switches) is automatically provisioned and managed by OVN. You don't need to manually create bridges or configure the underlying network topology—OVN-Kubernetes handles this transparently. This provides a simple, flat network topology where VMs can communicate directly using MAC addresses, without the complexity of IP address management (IPAM) or routing configuration. This makes Layer 2 UDN ideal for learning the fundamentals of UDN and for scenarios requiring straightforward network connectivity.
+## What is Layer2 UDN?
 
-## What is Layer 2 UDN?
+Layer2 UDN provides Layer2 (data link layer) connectivity across your OpenShift cluster. Unlike Layer3 topology which creates separate subnets per node, Layer2 creates one logical switch that spans all nodes, enabling:
 
-Layer 2 UDN operates at the data link layer (Layer 2) of the OSI networking model, providing a bridge-based network where VMs communicate using MAC addresses rather than IP addresses. When you create a Layer 2 UDN in OpenShift with OVN-Kubernetes, OVN automatically creates and manages the underlying virtual switch infrastructure that connects multiple VMs together on the same broadcast domain.
+- **Single broadcast domain** - All pods share the same Layer2 segment
+- **Layer2 features** - Support for ARP, broadcast traffic, and other Layer2 protocols
+- **Simplified networking** - No inter-node routing required for pod-to-pod communication
 
-**Key characteristics:**
-- **OVN-managed**: OVN-Kubernetes automatically creates and manages the underlying bridge/switch infrastructure
-- **MAC address communication**: VMs identify each other using MAC addresses
-- **No IPAM**: Does not include IP Address Management—IPs must be configured manually or through other means
-- **Flat network topology**: All VMs on the same UDN are on the same network segment
-- **Namespace-scoped**: The NetworkAttachmentDefinition is created in a specific namespace and available only to resources in that namespace
+## What Happens When You Create a Layer2 UDN?
 
-This type of UDN is the simplest form of custom networking and serves as the foundation for understanding more advanced configurations like Layer 3 UDNs (which add IPAM), secondary networks (multi-homing), and cluster-wide UDNs.
+When you create a Layer2 UDN, the following occurs:
 
-## Use Cases
-- Simple VM-to-VM communication within the same network
-- Testing and development environments
-- Scenarios where IPAM is not required
-- Basic network isolation
+1. **Single Logical Switch Creation**: One logical switch is created and shared across all nodes in the cluster (unlike Layer3 which creates per-node segments).
 
-## Configuration
+2. **Pod Connectivity**: Pods in namespaces that match the UDN's `namespaceSelector` automatically receive:
+   - IP addresses from the specified subnet
+   - Layer2 connectivity to other pods on the same network
+   - Ability to communicate as if on the same physical network segment
 
-### Step 1: Create NetworkAttachmentDefinition
+3. **Broadcast Domain**: Pods can utilize Layer2 features such as:
+   - ARP (Address Resolution Protocol)
+   - Broadcast traffic
+   - Multicast traffic
 
-Create a NetworkAttachmentDefinition in the `udn-test1` namespace. The `NetworkAttachmentDefinition` is a Kubernetes Custom Resource that follows the [Kubernetes Network Plumbing Working Group specification](https://github.com/k8snetworkplumbingwg/multi-net-spec). It defines how additional networks are attached to pods and VMs.
+4. **No Per-Node Subnets**: Unlike Layer3 topology, there are no separate subnets per node—all pods share the same Layer2 segment across the entire cluster.
 
-The `spec.config` field contains a JSON-formatted CNI configuration that specifies which CNI plugin to use and its parameters. For a Layer 2 UDN in OVN-Kubernetes, we use the `bridge` CNI plugin. OVN-Kubernetes will automatically handle the bridge creation and management:
+5. **Automatic Assignment**:
+   - **Primary UDN**: Pods automatically get interfaces on this network
+   - **Secondary UDN**: Pods require the `k8s.v1.cni.cncf.io/networks` annotation to attach
 
-```yaml
-apiVersion: k8s.cni.cncf.io/v1
-kind: NetworkAttachmentDefinition
-metadata:
-  name: primary-layer2-udn
-  namespace: udn-test1
-spec:
-  config: |
-    {
-      "cniVersion": "0.3.1",
-      "type": "bridge",
-      "bridge": "br-udn-test1",
-      "isDefaultGateway": false,
-      "ipam": {}
-    }
-```
+## Key Characteristics
 
-**Configuration breakdown:**
-- `cniVersion`: Specifies the CNI specification version (0.3.1 is widely supported)
-- `type`: The CNI plugin type—`bridge` for Layer 2 networking
-- `bridge`: The name of the bridge interface (OVN-Kubernetes will automatically create and manage this)
-- `isDefaultGateway`: Set to `false` since this is not the default route
-- `ipam`: Empty object `{}` indicates no IPAM—this is a pure Layer 2 configuration
+| Feature | Description |
+|---------|-------------|
+| **Topology** | `Layer2` - Single shared logical switch |
+| **Use Case** | When you need Layer2 semantics (broadcast, ARP) across nodes |
+| **IP Assignment** | From a single subnet pool shared across the cluster |
+| **Routing** | Layer2 switching, no inter-node routing needed |
+| **Broadcast Domain** | Single broadcast domain across all nodes |
 
-**Note**: In OVN-Kubernetes, you don't need to manually create the bridge. OVN automatically provisions and manages the underlying network infrastructure when VMs are attached to the UDN. While the [OpenShift Cluster Network Operator](https://github.com/openshift/cluster-network-operator) can manage additional networks through its configuration (using `additionalNetworks` in the network operator config), for User-Defined Networks in OpenShift Virtualization, you typically create `NetworkAttachmentDefinition` resources directly. This gives you more flexibility and follows the standard Kubernetes approach for multi-networking.
-
-### Step 2: Apply the Configuration
-
-```bash
-oc apply -f examples/primary-layer2-udn.yaml
-```
-
-### Step 3: Attach to Virtual Machine
-
-Add the network to your VM specification:
+## Example Configuration
 
 ```yaml
-apiVersion: kubevirt.io/v1
-kind: VirtualMachine
+apiVersion: k8s.ovn.org/v1
+kind: ClusterUserDefinedNetwork
 metadata:
-  name: vm-layer2-test
-  namespace: udn-test1
+  name: layer2-udn
 spec:
-  template:
-    spec:
-      domain:
-        devices:
-          interfaces:
-          - name: default
-            masquerade: {}
-          - name: udn-interface
-            bridge: {}
-      networks:
-      - name: default
-        pod: {}
-      - name: udn-interface
-        multus:
-          networkName: primary-layer2-udn
+  namespaceSelector:
+    matchLabels:
+      network: layer2
+  network:
+    topology: Layer2
+    layer2:
+      subnets:
+        - "10.200.0.0/16"
+      role: Primary  # or Secondary
 ```
+
+## When to Use Layer2 UDN
+
+Use Layer2 UDN when you need:
+
+- ✅ Layer2 networking features (ARP, broadcast)
+- ✅ Applications that require Layer2 semantics
+- ✅ Simple pod-to-pod connectivity without routing complexity
+- ✅ Single broadcast domain across the cluster
+
+## Comparison: Layer2 vs Layer3
+
+| Aspect | Layer2 | Layer3 |
+|--------|--------|--------|
+| **Logical Switches** | One shared switch | One switch per node |
+| **Subnets** | Single subnet pool | Per-node subnets |
+| **Routing** | Layer2 switching | Layer3 routing between nodes |
+| **Broadcast Domain** | Single domain | Separate per node |
+| **Use Case** | Layer2 features needed | Standard IP routing |
+
+## Additional Resources
+
+- [OpenShift Networking Documentation](https://docs.openshift.com/)
+- [OVN-Kubernetes User Defined Networks](https://github.com/ovn-org/ovn-kubernetes)
 
 ## Testing
 
