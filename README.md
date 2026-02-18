@@ -9,10 +9,10 @@ This repository contains the content strategy and scenario list for a blog serie
 * **Review & Publication**: Technical review and weekly publication plan.
 
 ## Testing Roadmap
-Our practical lab will cover ten core scenarios:
+Our practical lab will cover six core scenarios:
 1. **Primary Layer 2 UDN**: Testing in `udn-test1`.
 2. **Primary Layer 3 UDN**: Testing in `udn-test2` with IPAM.
-3. **Secondary Layer 2 UDN**: Multi-NIC setup in `udn-test1`.
+3. **Secondary Layer 2 UDN**: Multi-homing setup in `udn-test1`.
 4. **Services & Routes**: Validating ingress connectivity.
 5. **Egress & Network Policies**: Securing traffic and external access.
 6. **Localnet**: Direct VM-to-physical network attachment.
