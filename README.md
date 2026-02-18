@@ -1,9 +1,5 @@
 # udn-demo
 
-Here is a friendly, readable introduction for your blog series in Markdown, completely customized to the testing scenarios you outlined.
-
-I've also addressed your question about Layer 2 vs. Layer 3 capabilities below the draft!
-
 Exploring User-Defined Networking (UDN) in OpenShift Virtualization
 Welcome to our deep dive into User-Defined Networking (UDN) with OpenShift Virtualization! If you are a cloud architect, cluster admin, or network engineer looking to unlock advanced networking capabilities for your Virtual Machines (VMs), you are in the right place.
 
