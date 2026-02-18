@@ -1,5 +1,3 @@
-# Primary Layer 2 UDN
-
 # Layer2 UDN - User Defined Network
 
 ## Overview
@@ -50,13 +48,11 @@ When you create a Layer2 UDN, the following occurs:
 
 ```yaml
 apiVersion: k8s.ovn.org/v1
-kind: ClusterUserDefinedNetwork
+kind: UserDefinedNetwork
 metadata:
   name: layer2-udn
+  namespace: my-namespace
 spec:
-  namespaceSelector:
-    matchLabels:
-      network: layer2
   network:
     topology: Layer2
     layer2:
@@ -64,6 +60,8 @@ spec:
         - "10.200.0.0/16"
       role: Primary  # or Secondary
 ```
+
+**Note**: For cluster-wide UDN (CUDN), use `ClusterUserDefinedNetwork` with `namespaceSelector` instead.
 
 ## When to Use Layer2 UDN
 
@@ -84,53 +82,137 @@ Use Layer2 UDN when you need:
 | **Broadcast Domain** | Single domain | Separate per node |
 | **Use Case** | Layer2 features needed | Standard IP routing |
 
+## Test: Create Layer2 UDN with VM
+
+This test demonstrates creating a namespace, Layer2 UDN, and a VirtualMachine that uses the network.
+
+### Prerequisites
+
+- OpenShift cluster with OVN-Kubernetes CNI
+- KubeVirt installed (for VM creation)
+- Cluster administrator privileges
+
+### Step 1: Create Namespace
+
+```yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: udn-primary-layer2
+  labels:
+    network: layer2-primary
+    k8s.ovn.org/primary-user-defined-network: layer2-udn-primary
+```
+
+**Note**: The `k8s.ovn.org/primary-user-defined-network` label must be set at namespace creation time and cannot be added later.
+
+### Step 2: Create Layer2 UDN
+
+Create a namespace-scoped UserDefinedNetwork (UDN) with Primary role:
+
+```yaml
+apiVersion: k8s.ovn.org/v1
+kind: UserDefinedNetwork
+metadata:
+  name: layer2-udn-primary
+  namespace: udn-primary-layer2
+spec:
+  network:
+    topology: Layer2
+    layer2:
+      subnets:
+        - "10.200.0.0/16"
+      role: Primary
+```
+
+### Step 3: Create VirtualMachine
+
+```yaml
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: rhel-primary-layer2
+  namespace: udn-primary-layer2
+spec:
+  running: true
+  template:
+    metadata:
+      labels:
+        kubevirt.io/vm: rhel-primary-layer2
+    spec:
+      domain:
+        devices:
+          interfaces:
+            - name: default
+              masquerade: {}
+        resources:
+          requests:
+            memory: 2Gi
+            cpu: 1
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - name: containerdisk
+          containerDisk:
+            image: quay.io/containerdisks/rhel9:latest
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #cloud-config
+              password: redhat
+              chpasswd:
+                expire: false
+              ssh_pwauth: true
+```
+
+**Note**: Since this is a Primary UDN and the namespace has the `k8s.ovn.org/primary-user-defined-network` label, the VM will automatically receive a network interface on the Layer2 UDN. The VM's default network interface will be on the UDN network.
+
+### Apply All Resources
+
+```bash
+# Apply namespace
+oc apply -f namespace.yaml
+
+# Apply UserDefinedNetwork
+oc apply -f layer2-udn.yaml
+
+# Wait for UDN to be ready
+oc wait --for=condition=Ready userdefinednetwork/layer2-udn-primary -n udn-primary-layer2 --timeout=60s
+
+# Apply VirtualMachine
+oc apply -f vm.yaml
+
+# Check VM status
+oc get vm -n udn-primary-layer2
+oc get vmi -n udn-primary-layer2
+```
+
+### Verification
+
+```bash
+# Verify namespace has the correct labels
+oc get namespace udn-primary-layer2 --show-labels
+
+# Verify UserDefinedNetwork status
+oc get userdefinednetwork layer2-udn-primary -n udn-primary-layer2 -o yaml
+
+# Verify VM is running and has network interface
+oc get vmi rhel-primary-layer2 -n udn-primary-layer2 -o yaml | grep -A 10 interfaces
+
+# Check VM network connectivity (if VNC/console access available)
+oc console -n udn-primary-layer2 rhel-primary-layer2
+```
+
+### Expected Results
+
+- Namespace `udn-primary-layer2` created with proper labels
+- UserDefinedNetwork `layer2-udn-primary` in Ready state within the namespace
+- VirtualMachine `rhel-primary-layer2` running with network interface on the Layer2 UDN
+- VM can communicate with other pods/VMs on the same Layer2 network
+
 ## Additional Resources
 
 - [OpenShift Networking Documentation](https://docs.openshift.com/)
 - [OVN-Kubernetes User Defined Networks](https://github.com/ovn-org/ovn-kubernetes)
-
-## Testing
-
-### Verify Network Attachment
-
-```bash
-oc get network-attachment-definitions -n udn-test1
-```
-
-### Test Connectivity
-
-Once your VM is running, you can test Layer 2 connectivity:
-
-```bash
-# Connect to the VM
-virtctl console vm-layer2-test -n udn-test1
-
-# Inside the VM, check network interfaces
-ip addr show
-```
-
-## Key Points
-
-- **No IPAM**: Layer 2 UDN doesn't manage IP addresses automatically
-- **OVN-managed**: OVN-Kubernetes automatically creates and manages the bridge infrastructure
-- **Namespace-scoped**: This UDN is only available in the `udn-test1` namespace
-- **Primary network**: This is the primary (non-default) network for the VM
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Network not appearing in VM**
-   - Verify the NetworkAttachmentDefinition exists
-   - Check VM is in the same namespace
-   - Ensure the network name matches exactly
-
-2. **No connectivity**
-   - Verify the NetworkAttachmentDefinition is applied: `oc get network-attachment-definitions -n udn-test1`
-   - Check VM network interfaces: `ip addr show` inside VM
-   - Verify VM is running: `oc get vmi -n udn-test1`
-   - Check OVN network status (if accessible): The bridge is automatically managed by OVN-Kubernetes
-
-## Next Steps
-
-After understanding Primary Layer 2 UDN, proceed to [Primary Layer 3 UDN](./02-primary-layer3-udn.md) to learn about IP address management.
+- [KubeVirt Documentation](https://kubevirt.io/)
