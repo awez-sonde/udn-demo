@@ -1,0 +1,49 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: web-server-policy
+  namespace: udn-test1
+spec:
+  podSelector:
+    matchLabels:
+      app: web-server
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  # Allow HTTP from clients
+  - from:
+    - podSelector:
+        matchLabels:
+          app: client
+    ports:
+    - protocol: TCP
+      port: 80
+  # Allow HTTPS from anywhere in cluster
+  - from:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 443
+  egress:
+  # Allow to database
+  - to:
+    - podSelector:
+        matchLabels:
+          app: database
+    ports:
+    - protocol: TCP
+      port: 5432
+  # Allow DNS
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: UDP
+      port: 53
+  # Allow external HTTPS
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+    ports:
+    - protocol: TCP
+      port: 443

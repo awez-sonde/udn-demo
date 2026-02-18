@@ -1,0 +1,35 @@
+apiVersion: k8s.ovn.org/v1
+kind: EgressIP
+metadata:
+  name: egress-ip-vms
+  namespace: udn-test1
+spec:
+  egressIPs:
+  - 192.168.100.100
+  namespaceSelector:
+    matchLabels:
+      egress: enabled
+  podSelector:
+    matchLabels:
+      app: web-server
+
+---
+apiVersion: network.openshift.io/v1
+kind: EgressNetworkPolicy
+metadata:
+  name: egress-policy
+  namespace: udn-test1
+spec:
+  egress:
+  # Allow access to specific DNS servers
+  - to:
+      dnsName: "*.example.com"
+    type: Allow
+  # Allow access to specific IP ranges
+  - to:
+      cidrSelector: 8.8.8.8/32
+    type: Allow
+  # Block everything else (default deny)
+  - to:
+      cidrSelector: 0.0.0.0/0
+    type: Deny
