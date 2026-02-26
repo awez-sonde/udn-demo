@@ -45,14 +45,13 @@ This part of the blog series covers all User-Defined Network (UDN) types availab
    - Cleanup script: `examples/cleanup-validation.sh`
 
 ## GitOps / Argo CD Notes
-The bundled manifests are GitOps-ready and include Argo CD sync waves:
-- Wave `0`: Namespaces
-- Wave `1`: UDN/CUDN resources
-- Wave `2`: VirtualMachines
+For OpenShift GitOps, use the `Application` manifests in the `gitops/` folder:
+- `gitops/app-network-bootstrap.yaml` (namespaces + UDN/CUDN only)
+- `gitops/app-full-validation.yaml` (namespaces + UDN/CUDN + VMs)
 
-Recommended usage:
-- Networks only: `examples/all-network-bootstrap.yaml`
-- Full demo (networks + VMs): `examples/all-validation-resources.yaml`
+These Application files point to Kustomize paths:
+- `gitops/bootstrap`
+- `gitops/full-validation`
 
 ## Learning Path
 
