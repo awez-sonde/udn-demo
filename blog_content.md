@@ -184,6 +184,85 @@ Because Localnet touches physical networking, coordinate early with your network
 
 ---
 
+## Validation Scenarios (Ping-Based)
+Use this section after creating your demo resources to validate expected behavior.
+
+### 1) Intra-UDN validation (same UDN, should pass)
+Example: two VMs in `udn-test1` on the same Layer2 UDN.
+
+```bash
+# Get VM interfaces and IPs
+oc get vmi -n udn-test1 -o wide
+
+# Open console to VM A and ping VM B
+virtctl console <vm-a> -n udn-test1
+ping <vm-b-ip-on-udn>
+```
+
+Expected result: ping succeeds.
+
+### 2) Inter-UDN isolation validation (different UDNs, should fail)
+Example: one VM in `udn-overlap-a` and one VM in `udn-overlap-b`, both using `10.220.0.0/16`.
+
+```bash
+oc get vmi -n udn-overlap-a -o wide
+oc get vmi -n udn-overlap-b -o wide
+
+# From VM in namespace A, try pinging VM IP in namespace B
+virtctl console <vm-a> -n udn-overlap-a
+ping <vm-b-ip-on-10.220.0.0/16>
+```
+
+Expected result: ping fails, proving subnet overlap is safe when UDNs are isolated.
+
+### 3) CUDN validation (cross-namespace on same CUDN, should pass)
+Example: two VMs in different namespaces matched by the same `ClusterUserDefinedNetwork`.
+
+```bash
+# Confirm CUDN is ready
+oc get clusteruserdefinednetwork cluster-udn-test1 -o yaml
+
+# Check VM IPs in both namespaces
+oc get vmi -n udn-test3 -o wide
+oc get vmi -n <second-cudn-namespace> -o wide
+
+# Ping across namespaces over the shared CUDN
+virtctl console <vm-in-udn-test3> -n udn-test3
+ping <vm-ip-in-second-cudn-namespace>
+```
+
+Expected result: ping succeeds.
+
+### 4) Localnet validation (underlay reachability)
+Example: VM attached to Localnet network.
+
+```bash
+# Verify localnet CUDN
+oc get clusteruserdefinednetwork localnet-physical -o yaml
+
+# Open VM console and test underlay connectivity
+virtctl console <localnet-vm> -n udn-localnet-test
+ip addr
+ping <underlay-gateway-ip>
+ping <known-underlay-host-ip>
+```
+
+Expected result: VM can reach underlay targets allowed by your physical network policy.
+
+### 5) Quick status checks when validation fails
+
+```bash
+oc get userdefinednetwork -A
+oc get clusteruserdefinednetwork
+oc get network-attachment-definition -A
+oc describe userdefinednetwork <name> -n <namespace>
+oc describe clusteruserdefinednetwork <name>
+```
+
+Focus on `status.conditions` messages first; they usually show the root cause.
+
+---
+
 ## Practical Checks Before Production
 - Keep namespace and network resource creation order consistent.
 - Validate interface names and node capabilities for Localnet.
