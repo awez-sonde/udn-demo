@@ -60,7 +60,7 @@ Topology should be selected based on traffic shape, failure domains, and externa
 ---
 
 ## Part 1 Walkthrough: Create Layer 2
-From your repo (`Part1: Understanding and implementing UDNs`), apply:
+From the repo (`Part1: Understanding and implementing UDNs`), apply:
 
 ```bash
 oc apply -f part-1-udns/examples/primary-layer2-udn.yaml
