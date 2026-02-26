@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/your-org/udn-demo.git
+    repoURL: https://github.com/awez-sonde/udn-demo.git
     targetRevision: main
     path: gitops/bootstrap
   destination:

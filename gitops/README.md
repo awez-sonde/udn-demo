@@ -6,10 +6,10 @@ This folder contains `Application` resources for OpenShift GitOps (Argo CD).
 - `app-network-bootstrap.yaml`: deploys only namespaces + UDN/CUDN resources
 - `app-full-validation.yaml`: deploys namespaces + UDN/CUDN + validation VMs
 
-## Before applying
-Update these fields in each app file:
-- `spec.source.repoURL`
-- `spec.source.targetRevision`
+## Repository defaults
+The app files are already preconfigured with:
+- `spec.source.repoURL: https://github.com/awez-sonde/udn-demo.git`
+- `spec.source.targetRevision: main`
 
 ## Deploy
 ```bash
