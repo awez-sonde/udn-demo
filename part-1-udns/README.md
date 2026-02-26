@@ -49,9 +49,9 @@ For OpenShift GitOps, use the `Application` manifests in the `gitops/` folder:
 - `gitops/app-network-bootstrap.yaml` (namespaces + UDN/CUDN only)
 - `gitops/app-full-validation.yaml` (namespaces + UDN/CUDN + VMs)
 
-These Application files point to Kustomize paths:
-- `gitops/bootstrap`
-- `gitops/full-validation`
+These Application files use directory mode with a single included manifest:
+- `spec.source.path: part-1-udns/examples`
+- `spec.source.directory.include: all-network-bootstrap.yaml` or `all-validation-resources.yaml`
 
 ## Learning Path
 

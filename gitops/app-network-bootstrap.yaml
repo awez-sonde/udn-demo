@@ -8,7 +8,10 @@ spec:
   source:
     repoURL: https://github.com/awez-sonde/udn-demo.git
     targetRevision: main
-    path: gitops/bootstrap
+    path: part-1-udns/examples
+    directory:
+      recurse: false
+      include: all-network-bootstrap.yaml
   destination:
     server: https://kubernetes.default.svc
     namespace: default

@@ -10,6 +10,11 @@ This folder contains `Application` resources for OpenShift GitOps (Argo CD).
 The app files are already preconfigured with:
 - `spec.source.repoURL: https://github.com/awez-sonde/udn-demo.git`
 - `spec.source.targetRevision: main`
+- `spec.source.path: part-1-udns/examples`
+- `spec.source.directory.recurse: false`
+- `spec.source.directory.include` is set per app:
+  - `all-network-bootstrap.yaml` for network bootstrap
+  - `all-validation-resources.yaml` for full validation
 
 ## Deploy
 ```bash
