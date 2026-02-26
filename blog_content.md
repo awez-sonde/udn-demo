@@ -24,6 +24,11 @@ Most UDN designs are built with two resources:
 This gives a practical ownership model: cluster admins can define shared patterns, and tenant or app teams can consume those patterns safely.
 UDNs require OVN-Kubernetes as the CNI.
 
+UDN/CUDN and NAD can work together:
+- UDN/CUDN is the recommended high-level API for most tenant-isolation use cases.
+- NAD still exists for plugin-specific secondary networking workflows.
+- In UDN/CUDN workflows, OpenShift creates the network attachment artifacts for you.
+
 ---
 
 ## Why Teams Use UDNs for Virtualization
@@ -102,7 +107,16 @@ oc apply -f layer2-udn.yaml
 oc get userdefinednetwork layer2-udn -n udn-test1 -o yaml
 ```
 
-If you want to use the existing repo example (`part-1-udns/examples/primary-layer2-udn.yaml`), note that it creates a NAD, not a UDN CR.
+### Overlapping subnet use case (same CIDR in two projects)
+Apply the overlapping example:
+
+```bash
+oc apply -f part-1-udns/examples/overlapping-layer2-udn.yaml
+```
+
+This creates two namespaces (`udn-overlap-a` and `udn-overlap-b`) and assigns both a primary Layer2 UDN with the same subnet (`10.220.0.0/16`).  
+The same CIDR works because each UDN is isolated by design.
+
 
 ---
 
@@ -132,14 +146,12 @@ oc get userdefinednetwork layer3-udn -n udn-test2 -o yaml
 ```
 
 For Layer 3 UDN, `subnets` with `cidr` + `hostSubnet` are required.  
-If you use your repo example (`part-1-udns/examples/primary-layer3-udn.yaml`), that is a NAD workflow, not a UDN CR workflow.
+
 
 ---
 
 ## Part 1 Walkthrough: Create Localnet
-For Localnet, use either CUDN or NAD:
-
-### Option A: ClusterUserDefinedNetwork (Localnet)
+Use a `ClusterUserDefinedNetwork` with Localnet topology:
 
 ```yaml
 apiVersion: k8s.ovn.org/v1
@@ -161,16 +173,11 @@ spec:
         - "192.168.0.0/16"
 ```
 
-### Option B: NAD localnet (your existing Part 1 example)
+Apply and verify:
 
 ```bash
 oc apply -f part-1-udns/examples/localnet.yaml
-```
-
-Verify:
-
-```bash
-oc get network-attachment-definition localnet-physical -n udn-test1
+oc get clusteruserdefinednetwork localnet-physical -o yaml
 ```
 
 Because Localnet touches physical networking, coordinate early with your network team for interface, VLAN, OVS bridge mapping, and IP plan alignment.
@@ -192,7 +199,5 @@ User-Defined Networks give virtualization teams a much cleaner networking model 
 Once your role, topology, and IP plan are standardized, the same approach can be reused across teams and environments with less rework.
 
 ## References
-- Red Hat OpenShift Container Platform docs (UDN): https://docs.openshift.com/container-platform/4.21/networking/multiple_networks/primary_networks/about-user-defined-networks.html
-- OKD docs (UDN): https://docs.okd.io/4.21/networking/multiple_networks/primary_networks/about-user-defined-networks.html
-- Red Hat blog on UDN and virtualization: https://www.redhat.com/en/blog/user-defined-networks-red-hat-openshift-virtualization
-- Red Hat OpenShift Container Platform 4.21, Multiple networks (support matrix and Localnet behavior): https://docs.redhat.com/en/documentation/openshift_container_platform/4.21/html-single/multiple_networks/index
+- Red Hat OpenShift Container Platform 4.21, Multiple networks: https://docs.redhat.com/en/documentation/openshift_container_platform/4.21/html-single/multiple_networks/index
+- Red Hat OpenShift Container Platform 4.21, About user-defined networks: https://docs.redhat.com/en/documentation/openshift_container_platform/4.21/html/multiple_networks/about-user-defined-networks

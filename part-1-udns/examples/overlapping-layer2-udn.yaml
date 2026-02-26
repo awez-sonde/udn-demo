@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: udn-overlap-a
+  labels:
+    k8s.ovn.org/primary-user-defined-network: ""
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: udn-overlap-b
+  labels:
+    k8s.ovn.org/primary-user-defined-network: ""
+---
+apiVersion: k8s.ovn.org/v1
+kind: UserDefinedNetwork
+metadata:
+  name: overlap-l2-a
+  namespace: udn-overlap-a
+spec:
+  topology: Layer2
+  layer2:
+    role: Primary
+    subnets:
+      - "10.220.0.0/16"
+---
+apiVersion: k8s.ovn.org/v1
+kind: UserDefinedNetwork
+metadata:
+  name: overlap-l2-b
+  namespace: udn-overlap-b
+spec:
+  topology: Layer2
+  layer2:
+    role: Primary
+    subnets:
+      - "10.220.0.0/16"

@@ -12,6 +12,7 @@ This part covers all User-Defined Network types and configurations:
 - **Secondary Layer 2 UDN**: Multi-homing setup in `udn-test1`
 - **Cluster UDN (CUDN)**: Creating and using cluster-wide UDNs (`cluster-udn-test1` in `udn-test3`)
 - **Localnet**: Direct VM-to-physical network attachment
+- **Overlapping Subnet Use Case**: Two projects using the same subnet with isolation
 
 📖 [Read Part 1: Understanding and Implementing UDNs](./part-1-udns/README.md)
 
@@ -22,6 +23,15 @@ This part covers advanced networking features and security:
 - **Network Policies**: Securing traffic with network policies
 
 📖 [Read Part 2: Services, Routes, Egress, and Network Policies](./part-2-services-routes-egress/README.md)
+
+## UDN and NAD Relationship
+`UserDefinedNetwork` (UDN/CUDN) and `NetworkAttachmentDefinition` (NAD) both exist in Red Hat OpenShift Container Platform and can be used together.
+
+- UDN/CUDN is the higher-level, OpenShift-native API for tenant-friendly network segmentation.
+- NAD is still valid and is used for plugin-specific secondary networking use cases.
+- When you create UDN/CUDN resources, the platform creates the underlying NAD artifacts automatically.
+
+For most tenant isolation and day-2 operations, this repo recommends starting with UDN/CUDN because it is easier to operate and more consistent for platform teams.
 
 ## Repository Structure
 
@@ -40,7 +50,8 @@ udn-demo/
 │       ├── primary-layer3-udn.yaml
 │       ├── secondary-layer2-udn.yaml
 │       ├── cluster-udn.yaml
-│       └── localnet.yaml
+│       ├── localnet.yaml
+│       └── overlapping-layer2-udn.yaml
 └── part-2-services-routes-egress/
     ├── README.md
     ├── 01-services-and-routes.md
@@ -64,4 +75,8 @@ udn-demo/
 - OpenShift cluster with Virtualization enabled
 - Cluster admin or appropriate permissions to create NetworkAttachmentDefinitions
 - Basic understanding of Kubernetes networking concepts
+
+## Documentation Source
+This repository aligns to Red Hat OpenShift documentation as the source of truth:
+- https://docs.redhat.com/en/documentation/openshift_container_platform/4.21/html-single/multiple_networks/index
 

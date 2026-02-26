@@ -30,6 +30,11 @@ This part of the blog series covers all User-Defined Network (UDN) types availab
    - Bypassing the overlay network
    - Physical network integration
 
+6. Overlapping subnet example
+   - Two namespaces use the same subnet CIDR
+   - Isolation is preserved by separate UDN resources
+   - Example file: `examples/overlapping-layer2-udn.yaml`
+
 ## Learning Path
 
 Follow these guides in order to build your understanding progressively:
@@ -38,6 +43,13 @@ Follow these guides in order to build your understanding progressively:
 3. Learn Secondary Layer 2 UDN for multi-homing
 4. Explore Cluster UDN for namespace-wide networking
 5. Finish with Localnet for physical network integration
+
+## UDN and NAD Note
+UDN/CUDN and NAD both exist and are both valid in Red Hat OpenShift Container Platform.
+
+- Use UDN/CUDN first for tenant-focused network design and easier operations.
+- Use NAD where plugin-specific secondary networking behavior is required.
+- UDN/CUDN workflows create the underlying network attachment artifacts for you.
 
 ## Next Steps
 
