@@ -1,19 +1,22 @@
-apiVersion: k8s.cni.cncf.io/v1
-kind: NetworkAttachmentDefinition
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: udn-test3
+  labels:
+    udn-cluster: "true"
+    k8s.ovn.org/primary-user-defined-network: ""
+---
+apiVersion: k8s.ovn.org/v1
+kind: ClusterUserDefinedNetwork
 metadata:
   name: cluster-udn-test1
-  namespace: openshift-network-operator
-  annotations:
-    k8s.v1.cni.cncf.io/cluster-network: "true"
 spec:
-  config: |
-    {
-      "cniVersion": "0.3.1",
-      "type": "bridge",
-      "bridge": "br-cluster-udn",
-      "isDefaultGateway": false,
-      "ipam": {
-        "type": "whereabouts",
-        "range": "10.100.0.0/24"
-      }
-    }
+  namespaceSelector:
+    matchLabels:
+      udn-cluster: "true"
+  network:
+    topology: Layer2
+    layer2:
+      role: Primary
+      subnets:
+        - "10.100.0.0/16"

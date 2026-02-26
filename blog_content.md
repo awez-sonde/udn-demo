@@ -22,6 +22,7 @@ Most UDN designs are built with two resources:
 - **`ClusterUserDefinedNetwork`** (cluster-scoped, can target multiple namespaces)
 
 This gives a practical ownership model: cluster admins can define shared patterns, and tenant or app teams can consume those patterns safely.
+UDNs require OVN-Kubernetes as the CNI.
 
 ---
 
@@ -38,7 +39,7 @@ In short, UDNs make network design feel intentional instead of patched together.
 ---
 
 ## Topology choices and trade-offs
-OCP 4.21 documentation for UDNs and virtualization workflows highlights three practical topology paths:
+Red Hat OpenShift Container Platform documentation highlights three practical topology paths:
 
 ### Layer2
 - A shared broadcast domain across nodes.
@@ -55,46 +56,112 @@ OCP 4.21 documentation for UDNs and virtualization workflows highlights three pr
 - Useful when VMs must reach physical network domains directly.
 - Needs aligned node and physical network configuration.
 
+Important: `Localnet` is not supported in namespace-scoped `UserDefinedNetwork` CRs.  
+Use `Localnet` with:
+- secondary `NetworkAttachmentDefinition` (NAD), or
+- `ClusterUserDefinedNetwork` (CUDN) with `topology: Localnet` and `role: Secondary`.
+
 Topology should be selected based on traffic shape, failure domains, and external dependency requirements, not only on familiarity.
 
 ---
 
-## Part 1 Walkthrough: Create Layer 2
-From the repo (`Part1: Understanding and implementing UDNs`), apply:
+## Part 1 Walkthrough: Create Layer 2 UDN
+To create a primary Layer 2 UDN, create the namespace with the required label first:
 
 ```bash
-oc apply -f part-1-udns/examples/primary-layer2-udn.yaml
+cat <<'EOF' | oc apply -f -
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: udn-test1
+  labels:
+    k8s.ovn.org/primary-user-defined-network: ""
+EOF
 ```
 
-Verify:
+Create the `UserDefinedNetwork`:
+
+```yaml
+apiVersion: k8s.ovn.org/v1
+kind: UserDefinedNetwork
+metadata:
+  name: layer2-udn
+  namespace: udn-test1
+spec:
+  topology: Layer2
+  layer2:
+    role: Primary
+    subnets:
+      - "10.200.0.0/16"
+```
+
+Apply and verify:
 
 ```bash
-oc get network-attachment-definition primary-layer2-udn -n udn-test1
+oc apply -f layer2-udn.yaml
+oc get userdefinednetwork layer2-udn -n udn-test1 -o yaml
 ```
 
-This example is a bridge-based setup in `udn-test1`, useful for validating L2-style connectivity behavior.
+If you want to use the existing repo example (`part-1-udns/examples/primary-layer2-udn.yaml`), note that it creates a NAD, not a UDN CR.
 
 ---
 
-## Part 1 Walkthrough: Create Layer 3
-Apply:
+## Part 1 Walkthrough: Create Layer 3 UDN
+Create the `UserDefinedNetwork`:
 
-```bash
-oc apply -f part-1-udns/examples/primary-layer3-udn.yaml
+```yaml
+apiVersion: k8s.ovn.org/v1
+kind: UserDefinedNetwork
+metadata:
+  name: layer3-udn
+  namespace: udn-test2
+spec:
+  topology: Layer3
+  layer3:
+    role: Primary
+    subnets:
+      - cidr: 10.150.0.0/16
+        hostSubnet: 24
 ```
 
-Verify:
+Apply and verify:
 
 ```bash
-oc get network-attachment-definition primary-layer3-udn -n udn-test2
+oc apply -f layer3-udn.yaml
+oc get userdefinednetwork layer3-udn -n udn-test2 -o yaml
 ```
 
-This example uses `whereabouts` IPAM and is useful when you need managed address allocation and routing-friendly behavior.
+For Layer 3 UDN, `subnets` with `cidr` + `hostSubnet` are required.  
+If you use your repo example (`part-1-udns/examples/primary-layer3-udn.yaml`), that is a NAD workflow, not a UDN CR workflow.
 
 ---
 
 ## Part 1 Walkthrough: Create Localnet
-Apply:
+For Localnet, use either CUDN or NAD:
+
+### Option A: ClusterUserDefinedNetwork (Localnet)
+
+```yaml
+apiVersion: k8s.ovn.org/v1
+kind: ClusterUserDefinedNetwork
+metadata:
+  name: localnet-cudn
+spec:
+  namespaceSelector:
+    matchLabels:
+      udn-localnet: "true"
+  network:
+    topology: Localnet
+    localnet:
+      role: Secondary
+      physicalNetworkName: test
+      ipam:
+        lifecycle: Persistent
+      subnets:
+        - "192.168.0.0/16"
+```
+
+### Option B: NAD localnet (your existing Part 1 example)
 
 ```bash
 oc apply -f part-1-udns/examples/localnet.yaml
@@ -106,7 +173,7 @@ Verify:
 oc get network-attachment-definition localnet-physical -n udn-test1
 ```
 
-Because this pattern touches physical networking, coordinate early with your network team for interface, VLAN, and IP plan alignment.
+Because Localnet touches physical networking, coordinate early with your network team for interface, VLAN, OVS bridge mapping, and IP plan alignment.
 
 ---
 
@@ -128,3 +195,4 @@ Once your role, topology, and IP plan are standardized, the same approach can be
 - Red Hat OpenShift Container Platform docs (UDN): https://docs.openshift.com/container-platform/4.21/networking/multiple_networks/primary_networks/about-user-defined-networks.html
 - OKD docs (UDN): https://docs.okd.io/4.21/networking/multiple_networks/primary_networks/about-user-defined-networks.html
 - Red Hat blog on UDN and virtualization: https://www.redhat.com/en/blog/user-defined-networks-red-hat-openshift-virtualization
+- Red Hat OpenShift Container Platform 4.21, Multiple networks (support matrix and Localnet behavior): https://docs.redhat.com/en/documentation/openshift_container_platform/4.21/html-single/multiple_networks/index

@@ -1,14 +1,20 @@
-apiVersion: k8s.cni.cncf.io/v1
-kind: NetworkAttachmentDefinition
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: udn-test1
+  labels:
+    k8s.ovn.org/primary-user-defined-network: ""
+---
+apiVersion: k8s.ovn.org/v1
+kind: UserDefinedNetwork
 metadata:
   name: primary-layer2-udn
   namespace: udn-test1
 spec:
-  config: |
-    {
-      "cniVersion": "0.3.1",
-      "type": "bridge",
-      "bridge": "br-udn-test1",
-      "isDefaultGateway": false,
-      "ipam": {}
-    }
+  topology: Layer2
+  layer2:
+    role: Primary
+    subnets:
+      - "10.200.0.0/16"
+    ipam:
+      lifecycle: Persistent
