@@ -6,6 +6,14 @@ metadata:
     udn-cluster: "true"
     k8s.ovn.org/primary-user-defined-network: ""
 ---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: udn-test4
+  labels:
+    udn-cluster: "true"
+    k8s.ovn.org/primary-user-defined-network: ""
+---
 apiVersion: k8s.ovn.org/v1
 kind: ClusterUserDefinedNetwork
 metadata:

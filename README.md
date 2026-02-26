@@ -51,7 +51,14 @@ udn-demo/
 │       ├── secondary-layer2-udn.yaml
 │       ├── cluster-udn.yaml
 │       ├── localnet.yaml
-│       └── overlapping-layer2-udn.yaml
+│       ├── overlapping-layer2-udn.yaml
+│       ├── vms-layer2-intra.yaml
+│       ├── vms-overlap.yaml
+│       ├── vms-cudn.yaml
+│       ├── vm-localnet.yaml
+│       ├── all-network-bootstrap.yaml
+│       ├── all-validation-resources.yaml
+│       └── cleanup-validation.sh
 └── part-2-services-routes-egress/
     ├── README.md
     ├── 01-services-and-routes.md

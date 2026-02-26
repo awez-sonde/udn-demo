@@ -188,60 +188,72 @@ Because Localnet touches physical networking, coordinate early with your network
 Use this section after creating your demo resources to validate expected behavior.
 
 ### 1) Intra-UDN validation (same UDN, should pass)
-Example: two VMs in `udn-test1` on the same Layer2 UDN.
+Example: two VMs in `udn-test1` on the same Layer2 UDN (`vm-l2-a`, `vm-l2-b`).
 
 ```bash
+# Create VMs
+oc apply -f part-1-udns/examples/vms-layer2-intra.yaml
+
 # Get VM interfaces and IPs
 oc get vmi -n udn-test1 -o wide
 
 # Open console to VM A and ping VM B
-virtctl console <vm-a> -n udn-test1
-ping <vm-b-ip-on-udn>
+virtctl console vm-l2-a -n udn-test1
+ping <vm-l2-b-ip-on-udn>
 ```
 
 Expected result: ping succeeds.
 
 ### 2) Inter-UDN isolation validation (different UDNs, should fail)
-Example: one VM in `udn-overlap-a` and one VM in `udn-overlap-b`, both using `10.220.0.0/16`.
+Example: one VM in `udn-overlap-a` and one VM in `udn-overlap-b`, both using `10.220.0.0/16` (`vm-overlap-a`, `vm-overlap-b`).
 
 ```bash
+# Create VMs
+oc apply -f part-1-udns/examples/vms-overlap.yaml
+
 oc get vmi -n udn-overlap-a -o wide
 oc get vmi -n udn-overlap-b -o wide
 
 # From VM in namespace A, try pinging VM IP in namespace B
-virtctl console <vm-a> -n udn-overlap-a
-ping <vm-b-ip-on-10.220.0.0/16>
+virtctl console vm-overlap-a -n udn-overlap-a
+ping <vm-overlap-b-ip-on-10.220.0.0/16>
 ```
 
 Expected result: ping fails, proving subnet overlap is safe when UDNs are isolated.
 
 ### 3) CUDN validation (cross-namespace on same CUDN, should pass)
-Example: two VMs in different namespaces matched by the same `ClusterUserDefinedNetwork`.
+Example: two VMs in different namespaces matched by the same `ClusterUserDefinedNetwork` (`vm-cudn-a` in `udn-test3`, `vm-cudn-b` in `udn-test4`).
 
 ```bash
 # Confirm CUDN is ready
 oc get clusteruserdefinednetwork cluster-udn-test1 -o yaml
 
+# Create VMs
+oc apply -f part-1-udns/examples/vms-cudn.yaml
+
 # Check VM IPs in both namespaces
 oc get vmi -n udn-test3 -o wide
-oc get vmi -n <second-cudn-namespace> -o wide
+oc get vmi -n udn-test4 -o wide
 
 # Ping across namespaces over the shared CUDN
-virtctl console <vm-in-udn-test3> -n udn-test3
-ping <vm-ip-in-second-cudn-namespace>
+virtctl console vm-cudn-a -n udn-test3
+ping <vm-cudn-b-ip-in-udn-test4>
 ```
 
 Expected result: ping succeeds.
 
 ### 4) Localnet validation (underlay reachability)
-Example: VM attached to Localnet network.
+Example: VM attached to Localnet network (`vm-localnet-1`).
 
 ```bash
 # Verify localnet CUDN
 oc get clusteruserdefinednetwork localnet-physical -o yaml
 
+# Create VM
+oc apply -f part-1-udns/examples/vm-localnet.yaml
+
 # Open VM console and test underlay connectivity
-virtctl console <localnet-vm> -n udn-localnet-test
+virtctl console vm-localnet-1 -n udn-localnet-test
 ip addr
 ping <underlay-gateway-ip>
 ping <known-underlay-host-ip>
@@ -260,6 +272,28 @@ oc describe clusteruserdefinednetwork <name>
 ```
 
 Focus on `status.conditions` messages first; they usually show the root cause.
+
+### 6) One-shot demo setup (all validation resources)
+
+```bash
+oc apply -f part-1-udns/examples/all-validation-resources.yaml
+```
+
+This applies all namespaces, UDN/CUDN resources, and named VMs used in the validation section.
+
+### 7) Network-only bootstrap (no VMs)
+
+```bash
+oc apply -f part-1-udns/examples/all-network-bootstrap.yaml
+```
+
+This applies only namespaces and UDN/CUDN resources, so you can add VMs later as needed.
+
+### 8) Cleanup after demo
+
+```bash
+bash part-1-udns/examples/cleanup-validation.sh
+```
 
 ---
 

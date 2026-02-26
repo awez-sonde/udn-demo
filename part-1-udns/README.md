@@ -35,6 +35,15 @@ This part of the blog series covers all User-Defined Network (UDN) types availab
    - Isolation is preserved by separate UDN resources
    - Example file: `examples/overlapping-layer2-udn.yaml`
 
+7. Validation VM manifests
+   - Intra-UDN VMs: `examples/vms-layer2-intra.yaml`
+   - Overlap test VMs: `examples/vms-overlap.yaml`
+   - CUDN VMs: `examples/vms-cudn.yaml`
+   - Localnet VM: `examples/vm-localnet.yaml`
+   - Network bootstrap only (namespaces + UDN/CUDN): `examples/all-network-bootstrap.yaml`
+   - Full validation bundle: `examples/all-validation-resources.yaml`
+   - Cleanup script: `examples/cleanup-validation.sh`
+
 ## Learning Path
 
 Follow these guides in order to build your understanding progressively:

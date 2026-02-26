@@ -1,0 +1,146 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: udn-test1
+  labels:
+    k8s.ovn.org/primary-user-defined-network: ""
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: udn-test2
+  labels:
+    k8s.ovn.org/primary-user-defined-network: ""
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: udn-test3
+  labels:
+    udn-cluster: "true"
+    k8s.ovn.org/primary-user-defined-network: ""
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: udn-test4
+  labels:
+    udn-cluster: "true"
+    k8s.ovn.org/primary-user-defined-network: ""
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: udn-localnet-test
+  labels:
+    udn-localnet: "true"
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: udn-overlap-a
+  labels:
+    k8s.ovn.org/primary-user-defined-network: ""
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: udn-overlap-b
+  labels:
+    k8s.ovn.org/primary-user-defined-network: ""
+---
+apiVersion: k8s.ovn.org/v1
+kind: UserDefinedNetwork
+metadata:
+  name: primary-layer2-udn
+  namespace: udn-test1
+spec:
+  topology: Layer2
+  layer2:
+    role: Primary
+    subnets:
+      - "10.200.0.0/16"
+    ipam:
+      lifecycle: Persistent
+---
+apiVersion: k8s.ovn.org/v1
+kind: UserDefinedNetwork
+metadata:
+  name: secondary-layer2-udn
+  namespace: udn-test1
+spec:
+  topology: Layer2
+  layer2:
+    role: Secondary
+    subnets:
+      - "10.210.0.0/16"
+---
+apiVersion: k8s.ovn.org/v1
+kind: UserDefinedNetwork
+metadata:
+  name: primary-layer3-udn
+  namespace: udn-test2
+spec:
+  topology: Layer3
+  layer3:
+    role: Primary
+    subnets:
+      - cidr: 10.150.0.0/16
+        hostSubnet: 24
+---
+apiVersion: k8s.ovn.org/v1
+kind: UserDefinedNetwork
+metadata:
+  name: overlap-l2-a
+  namespace: udn-overlap-a
+spec:
+  topology: Layer2
+  layer2:
+    role: Primary
+    subnets:
+      - "10.220.0.0/16"
+---
+apiVersion: k8s.ovn.org/v1
+kind: UserDefinedNetwork
+metadata:
+  name: overlap-l2-b
+  namespace: udn-overlap-b
+spec:
+  topology: Layer2
+  layer2:
+    role: Primary
+    subnets:
+      - "10.220.0.0/16"
+---
+apiVersion: k8s.ovn.org/v1
+kind: ClusterUserDefinedNetwork
+metadata:
+  name: cluster-udn-test1
+spec:
+  namespaceSelector:
+    matchLabels:
+      udn-cluster: "true"
+  network:
+    topology: Layer2
+    layer2:
+      role: Primary
+      subnets:
+        - "10.100.0.0/16"
+---
+apiVersion: k8s.ovn.org/v1
+kind: ClusterUserDefinedNetwork
+metadata:
+  name: localnet-physical
+spec:
+  namespaceSelector:
+    matchLabels:
+      udn-localnet: "true"
+  network:
+    topology: Localnet
+    localnet:
+      role: Secondary
+      physicalNetworkName: localnet1
+      ipam:
+        lifecycle: Persistent
+      subnets:
+        - "192.168.1.0/24"
