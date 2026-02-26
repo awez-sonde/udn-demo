@@ -44,6 +44,16 @@ This part of the blog series covers all User-Defined Network (UDN) types availab
    - Full validation bundle: `examples/all-validation-resources.yaml`
    - Cleanup script: `examples/cleanup-validation.sh`
 
+## GitOps / Argo CD Notes
+The bundled manifests are GitOps-ready and include Argo CD sync waves:
+- Wave `0`: Namespaces
+- Wave `1`: UDN/CUDN resources
+- Wave `2`: VirtualMachines
+
+Recommended usage:
+- Networks only: `examples/all-network-bootstrap.yaml`
+- Full demo (networks + VMs): `examples/all-validation-resources.yaml`
+
 ## Learning Path
 
 Follow these guides in order to build your understanding progressively:

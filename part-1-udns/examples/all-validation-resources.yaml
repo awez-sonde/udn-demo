@@ -2,6 +2,8 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: udn-test1
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
   labels:
     k8s.ovn.org/primary-user-defined-network: ""
 ---
@@ -9,6 +11,8 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: udn-test2
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
   labels:
     k8s.ovn.org/primary-user-defined-network: ""
 ---
@@ -16,6 +20,8 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: udn-test3
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
   labels:
     udn-cluster: "true"
     k8s.ovn.org/primary-user-defined-network: ""
@@ -24,6 +30,8 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: udn-test4
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
   labels:
     udn-cluster: "true"
     k8s.ovn.org/primary-user-defined-network: ""
@@ -32,6 +40,8 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: udn-localnet-test
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
   labels:
     udn-localnet: "true"
 ---
@@ -39,6 +49,8 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: udn-overlap-a
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
   labels:
     k8s.ovn.org/primary-user-defined-network: ""
 ---
@@ -46,6 +58,8 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: udn-overlap-b
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
   labels:
     k8s.ovn.org/primary-user-defined-network: ""
 ---
@@ -54,6 +68,8 @@ kind: UserDefinedNetwork
 metadata:
   name: primary-layer2-udn
   namespace: udn-test1
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   topology: Layer2
   layer2:
@@ -68,6 +84,8 @@ kind: UserDefinedNetwork
 metadata:
   name: secondary-layer2-udn
   namespace: udn-test1
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   topology: Layer2
   layer2:
@@ -80,6 +98,8 @@ kind: UserDefinedNetwork
 metadata:
   name: primary-layer3-udn
   namespace: udn-test2
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   topology: Layer3
   layer3:
@@ -93,6 +113,8 @@ kind: UserDefinedNetwork
 metadata:
   name: overlap-l2-a
   namespace: udn-overlap-a
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   topology: Layer2
   layer2:
@@ -105,6 +127,8 @@ kind: UserDefinedNetwork
 metadata:
   name: overlap-l2-b
   namespace: udn-overlap-b
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   topology: Layer2
   layer2:
@@ -116,6 +140,8 @@ apiVersion: k8s.ovn.org/v1
 kind: ClusterUserDefinedNetwork
 metadata:
   name: cluster-udn-test1
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   namespaceSelector:
     matchLabels:
@@ -131,6 +157,8 @@ apiVersion: k8s.ovn.org/v1
 kind: ClusterUserDefinedNetwork
 metadata:
   name: localnet-physical
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   namespaceSelector:
     matchLabels:
@@ -150,6 +178,8 @@ kind: VirtualMachine
 metadata:
   name: vm-l2-a
   namespace: udn-test1
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
 spec:
   running: true
   template:
@@ -192,6 +222,8 @@ kind: VirtualMachine
 metadata:
   name: vm-l2-b
   namespace: udn-test1
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
 spec:
   running: true
   template:
@@ -234,6 +266,8 @@ kind: VirtualMachine
 metadata:
   name: vm-overlap-a
   namespace: udn-overlap-a
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
 spec:
   running: true
   template:
@@ -276,6 +310,8 @@ kind: VirtualMachine
 metadata:
   name: vm-overlap-b
   namespace: udn-overlap-b
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
 spec:
   running: true
   template:
@@ -318,6 +354,8 @@ kind: VirtualMachine
 metadata:
   name: vm-cudn-a
   namespace: udn-test3
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
 spec:
   running: true
   template:
@@ -360,6 +398,8 @@ kind: VirtualMachine
 metadata:
   name: vm-cudn-b
   namespace: udn-test4
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
 spec:
   running: true
   template:
@@ -402,6 +442,8 @@ kind: VirtualMachine
 metadata:
   name: vm-localnet-1
   namespace: udn-localnet-test
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
 spec:
   running: true
   template:

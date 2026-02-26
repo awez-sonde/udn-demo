@@ -295,6 +295,8 @@ This applies only namespaces and UDN/CUDN resources, so you can add VMs later as
 bash part-1-udns/examples/cleanup-validation.sh
 ```
 
+GitOps note: both all-in-one manifests include Argo CD sync waves (`0` namespaces, `1` networks, `2` VMs) for deterministic apply order.
+
 ---
 
 ## Practical Checks Before Production
