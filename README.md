@@ -280,6 +280,18 @@ oc apply -f part-1-udns/examples/all-validation-resources.yaml
 ```
 
 This applies all namespaces, UDN/CUDN resources, and named VMs used in the validation section.
+In this bundle, VMs are created in a stopped state (`running: false`) for GitOps-friendly health behavior.
+Start them when needed:
+
+```bash
+virtctl start vm-l2-a -n udn-test1
+virtctl start vm-l2-b -n udn-test1
+virtctl start vm-overlap-a -n udn-overlap-a
+virtctl start vm-overlap-b -n udn-overlap-b
+virtctl start vm-cudn-a -n udn-test3
+virtctl start vm-cudn-b -n udn-test4
+virtctl start vm-localnet-1 -n udn-localnet-test
+```
 
 ### 7) Network-only bootstrap (no VMs)
 

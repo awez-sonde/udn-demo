@@ -151,7 +151,7 @@ metadata:
   name: vm-l2-a
   namespace: udn-test1
 spec:
-  running: true
+  running: false
   template:
     metadata:
       labels:
@@ -200,7 +200,7 @@ metadata:
   name: vm-l2-b
   namespace: udn-test1
 spec:
-  running: true
+  running: false
   template:
     metadata:
       labels:
@@ -249,7 +249,7 @@ metadata:
   name: vm-overlap-a
   namespace: udn-overlap-a
 spec:
-  running: true
+  running: false
   template:
     metadata:
       labels:
@@ -298,7 +298,7 @@ metadata:
   name: vm-overlap-b
   namespace: udn-overlap-b
 spec:
-  running: true
+  running: false
   template:
     metadata:
       labels:
@@ -347,7 +347,7 @@ metadata:
   name: vm-cudn-a
   namespace: udn-test3
 spec:
-  running: true
+  running: false
   template:
     metadata:
       labels:
@@ -396,7 +396,7 @@ metadata:
   name: vm-cudn-b
   namespace: udn-test4
 spec:
-  running: true
+  running: false
   template:
     metadata:
       labels:
@@ -445,7 +445,7 @@ metadata:
   name: vm-localnet-1
   namespace: udn-localnet-test
 spec:
-  running: true
+  running: false
   template:
     metadata:
       labels:

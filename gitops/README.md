@@ -26,3 +26,17 @@ or
 ```bash
 oc apply -f gitops/app-full-validation.yaml
 ```
+
+## VM Runtime Note (GitOps)
+In the full validation bundle, VMs are created with `spec.running: false` to keep Argo CD app health stable.
+Start them when you are ready to run connectivity checks:
+
+```bash
+virtctl start vm-l2-a -n udn-test1
+virtctl start vm-l2-b -n udn-test1
+virtctl start vm-overlap-a -n udn-overlap-a
+virtctl start vm-overlap-b -n udn-overlap-b
+virtctl start vm-cudn-a -n udn-test3
+virtctl start vm-cudn-b -n udn-test4
+virtctl start vm-localnet-1 -n udn-localnet-test
+```
