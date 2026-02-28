@@ -11,11 +11,18 @@ spec:
     path: part-1-udns/examples
     directory:
       recurse: false
-      include: all-validation-resources.yaml
+      include: all-validation-vms-only.yaml
   destination:
     server: https://kubernetes.default.svc
     namespace: default
+  ignoreDifferences:
+    - group: kubevirt.io
+      kind: VirtualMachine
+      jsonPointers:
+        - /spec/running
   syncPolicy:
     automated:
-      prune: true
+      prune: false
       selfHeal: true
+    syncOptions:
+      - RespectIgnoreDifferences=true

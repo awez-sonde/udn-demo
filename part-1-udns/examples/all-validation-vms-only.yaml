@@ -1,0 +1,347 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-l2-a
+  namespace: udn-test1
+spec:
+  running: true
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-l2-a
+    spec:
+      domain:
+        resources:
+          requests:
+            memory: 1Gi
+        devices:
+          disks:
+            - name: containerdisk
+              disk:
+                bus: virtio
+            - name: cloudinitdisk
+              disk:
+                bus: virtio
+          interfaces:
+            - name: default
+              masquerade: {}
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - name: containerdisk
+          containerDisk:
+            image: quay.io/containerdisks/fedora:latest
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #cloud-config
+              users:
+                - name: demo
+                  groups: [wheel]
+                  shell: /bin/bash
+              chpasswd:
+                expire: false
+                users:
+                  - name: demo
+                    password: redhat
+              ssh_pwauth: true
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-l2-b
+  namespace: udn-test1
+spec:
+  running: true
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-l2-b
+    spec:
+      domain:
+        resources:
+          requests:
+            memory: 1Gi
+        devices:
+          disks:
+            - name: containerdisk
+              disk:
+                bus: virtio
+            - name: cloudinitdisk
+              disk:
+                bus: virtio
+          interfaces:
+            - name: default
+              masquerade: {}
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - name: containerdisk
+          containerDisk:
+            image: quay.io/containerdisks/fedora:latest
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #cloud-config
+              users:
+                - name: demo
+                  groups: [wheel]
+                  shell: /bin/bash
+              chpasswd:
+                expire: false
+                users:
+                  - name: demo
+                    password: redhat
+              ssh_pwauth: true
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-overlap-a
+  namespace: udn-overlap-a
+spec:
+  running: true
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-overlap-a
+    spec:
+      domain:
+        resources:
+          requests:
+            memory: 1Gi
+        devices:
+          disks:
+            - name: containerdisk
+              disk:
+                bus: virtio
+            - name: cloudinitdisk
+              disk:
+                bus: virtio
+          interfaces:
+            - name: default
+              masquerade: {}
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - name: containerdisk
+          containerDisk:
+            image: quay.io/containerdisks/fedora:latest
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #cloud-config
+              users:
+                - name: demo
+                  groups: [wheel]
+                  shell: /bin/bash
+              chpasswd:
+                expire: false
+                users:
+                  - name: demo
+                    password: redhat
+              ssh_pwauth: true
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-overlap-b
+  namespace: udn-overlap-b
+spec:
+  running: true
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-overlap-b
+    spec:
+      domain:
+        resources:
+          requests:
+            memory: 1Gi
+        devices:
+          disks:
+            - name: containerdisk
+              disk:
+                bus: virtio
+            - name: cloudinitdisk
+              disk:
+                bus: virtio
+          interfaces:
+            - name: default
+              masquerade: {}
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - name: containerdisk
+          containerDisk:
+            image: quay.io/containerdisks/fedora:latest
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #cloud-config
+              users:
+                - name: demo
+                  groups: [wheel]
+                  shell: /bin/bash
+              chpasswd:
+                expire: false
+                users:
+                  - name: demo
+                    password: redhat
+              ssh_pwauth: true
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-cudn-a
+  namespace: udn-test3
+spec:
+  running: true
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-cudn-a
+    spec:
+      domain:
+        resources:
+          requests:
+            memory: 1Gi
+        devices:
+          disks:
+            - name: containerdisk
+              disk:
+                bus: virtio
+            - name: cloudinitdisk
+              disk:
+                bus: virtio
+          interfaces:
+            - name: default
+              masquerade: {}
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - name: containerdisk
+          containerDisk:
+            image: quay.io/containerdisks/fedora:latest
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #cloud-config
+              users:
+                - name: demo
+                  groups: [wheel]
+                  shell: /bin/bash
+              chpasswd:
+                expire: false
+                users:
+                  - name: demo
+                    password: redhat
+              ssh_pwauth: true
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-cudn-b
+  namespace: udn-test4
+spec:
+  running: true
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-cudn-b
+    spec:
+      domain:
+        resources:
+          requests:
+            memory: 1Gi
+        devices:
+          disks:
+            - name: containerdisk
+              disk:
+                bus: virtio
+            - name: cloudinitdisk
+              disk:
+                bus: virtio
+          interfaces:
+            - name: default
+              masquerade: {}
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - name: containerdisk
+          containerDisk:
+            image: quay.io/containerdisks/fedora:latest
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #cloud-config
+              users:
+                - name: demo
+                  groups: [wheel]
+                  shell: /bin/bash
+              chpasswd:
+                expire: false
+                users:
+                  - name: demo
+                    password: redhat
+              ssh_pwauth: true
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-localnet-1
+  namespace: udn-localnet-test
+spec:
+  running: true
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-localnet-1
+    spec:
+      domain:
+        resources:
+          requests:
+            memory: 1Gi
+        devices:
+          disks:
+            - name: containerdisk
+              disk:
+                bus: virtio
+            - name: cloudinitdisk
+              disk:
+                bus: virtio
+          interfaces:
+            - name: default
+              masquerade: {}
+            - name: localnet-if
+              bridge: {}
+      networks:
+        - name: default
+          pod: {}
+        - name: localnet-if
+          multus:
+            networkName: localnet-physical
+      volumes:
+        - name: containerdisk
+          containerDisk:
+            image: quay.io/containerdisks/fedora:latest
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #cloud-config
+              users:
+                - name: demo
+                  groups: [wheel]
+                  shell: /bin/bash
+              chpasswd:
+                expire: false
+                users:
+                  - name: demo
+                    password: redhat
+              ssh_pwauth: true
