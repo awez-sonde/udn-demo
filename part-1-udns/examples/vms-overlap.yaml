@@ -36,15 +36,9 @@ spec:
           cloudInitNoCloud:
             userData: |
               #cloud-config
-              users:
-                - name: demo
-                  groups: [wheel]
-                  shell: /bin/bash
-              chpasswd:
-                expire: false
-                users:
-                  - name: demo
-                    password: redhat
+              user: demo
+              password: redhat
+              chpasswd: { expire: false }
               ssh_pwauth: true
 ---
 apiVersion: kubevirt.io/v1
@@ -85,13 +79,7 @@ spec:
           cloudInitNoCloud:
             userData: |
               #cloud-config
-              users:
-                - name: demo
-                  groups: [wheel]
-                  shell: /bin/bash
-              chpasswd:
-                expire: false
-                users:
-                  - name: demo
-                    password: redhat
+              user: demo
+              password: redhat
+              chpasswd: { expire: false }
               ssh_pwauth: true
