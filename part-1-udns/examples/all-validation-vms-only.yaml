@@ -87,6 +87,49 @@ spec:
 apiVersion: kubevirt.io/v1
 kind: VirtualMachine
 metadata:
+  name: vm-l2-udn-bridged
+  namespace: udn-test1
+spec:
+  running: true
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-l2-udn-bridged
+    spec:
+      domain:
+        resources:
+          requests:
+            memory: 1Gi
+        devices:
+          disks:
+            - name: containerdisk
+              disk:
+                bus: virtio
+            - name: cloudinitdisk
+              disk:
+                bus: virtio
+          interfaces:
+            - name: default
+              bridge: {}
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - name: containerdisk
+          containerDisk:
+            image: quay.io/containerdisks/fedora:latest
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #cloud-config
+              user: demo
+              password: redhat
+              chpasswd: { expire: false }
+              ssh_pwauth: true
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
   name: vm-overlap-a
   namespace: udn-overlap-a
 spec:

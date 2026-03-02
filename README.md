@@ -204,6 +204,20 @@ ping <vm-l2-b-ip-on-udn>
 
 Expected result: ping succeeds.
 
+Bridge-mode VM check (from the all-validation bundle):
+
+```bash
+# Start the bridge-mode VM in udn-test1
+virtctl start vm-l2-udn-bridged -n udn-test1
+
+# Verify the VMI and inspect interface details from inside the guest
+oc get vmi vm-l2-udn-bridged -n udn-test1 -o wide
+virtctl console vm-l2-udn-bridged -n udn-test1
+ip addr
+```
+
+Expected result: `vm-l2-udn-bridged` comes up on the UDN and uses a bridged primary interface (not masquerade).
+
 ### 2) Inter-UDN isolation validation (different UDNs, should fail)
 Example: one VM in `udn-overlap-a` and one VM in `udn-overlap-b`, both using `10.220.0.0/16` (`vm-overlap-a`, `vm-overlap-b`).
 
@@ -286,6 +300,7 @@ Start them when needed:
 ```bash
 virtctl start vm-l2-a -n udn-test1
 virtctl start vm-l2-b -n udn-test1
+virtctl start vm-l2-udn-bridged -n udn-test1
 virtctl start vm-overlap-a -n udn-overlap-a
 virtctl start vm-overlap-b -n udn-overlap-b
 virtctl start vm-cudn-a -n udn-test3
