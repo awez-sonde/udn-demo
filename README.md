@@ -218,6 +218,46 @@ ip addr
 
 Expected result: `vm-l2-udn-bridged` comes up on the UDN and uses a bridged primary interface (not masquerade).
 
+### Masquerade vs Bridge: where the UDN IP appears
+In this demo, we have used two modes of network interfaces for VM's:
+
+- `vm-l2-a` (masquerade): inside the VM you usually see a NAT-style guest IP (for example `10.0.2.x`), not the UDN IP.
+- `vm-l2-udn-bridged` (bridge): inside the VM you see the UDN IP directly (for example `10.200.0.x`).
+- In masquerade mode, the UDN-facing IP is visible on interfaces in the `virt-launcher` pod namespace.
+
+Use these checks side by side:
+
+```bash
+# Guest view (masquerade VM)
+virtctl console vm-l2-a -n udn-test1
+ip a
+
+# Guest view (bridge VM)
+virtctl console vm-l2-udn-bridged -n udn-test1
+ip a
+
+# Pod namespace view for masquerade VM
+MASQ_POD=$(oc get pod -n udn-test1 -l kubevirt.io=virt-launcher,kubevirt.io/domain=vm-l2-a -o name)
+oc exec -n udn-test1 -it "${MASQ_POD#pod/}" -- ip a
+
+# Pod namespace view for bridge VM
+BRIDGE_POD=$(oc get pod -n udn-test1 -l kubevirt.io=virt-launcher,kubevirt.io/domain=vm-l2-udn-bridged -o name)
+oc exec -n udn-test1 -it "${BRIDGE_POD#pod/}" -- ip a
+```
+
+How to read common `virt-launcher` interfaces (names can vary slightly):
+
+- `eth0`: pod primary network interface (cluster pod network, not the guest NIC).
+- `ovn-udn1`: OVN/UDN-side interface created for the UDN attachment.
+- `k6t-ovn-udn1`: Linux bridge managed by KubeVirt to connect VM tap and pod-side UDN attachment.
+- `tap0`: tap device connected to the VM NIC and attached to `k6t-ovn-udn1`.
+- `lo`: loopback interface.
+
+Practical interpretation for this demo:
+
+- In masquerade mode, traffic is NATed between guest NIC and pod-side UDN attachment, so the guest does not present the UDN IP directly.
+- In bridge mode, the VM NIC is bridged into the UDN path, so the guest gets and shows the UDN IP directly.
+
 ### 2) Inter-UDN isolation validation (different UDNs, should fail)
 Example: one VM in `udn-overlap-a` and one VM in `udn-overlap-b`, both using `10.220.0.0/16` (`vm-overlap-a`, `vm-overlap-b`).
 
