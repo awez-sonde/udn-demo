@@ -223,7 +223,7 @@ In this demo, we have used two modes of network interfaces for VM's:
 
 - `vm-l2-a` (masquerade): inside the VM you usually see a NAT-style guest IP (for example `10.0.2.x`), not the UDN IP.
 - `vm-l2-udn-bridged` (bridge): inside the VM you see the UDN IP directly (for example `10.200.0.x`).
-- In masquerade mode, the UDN-facing IP is visible on interfaces in the `virt-launcher` pod namespace.
+- In masquerade mode, the UDN-facing IP is visible on interfaces in the `virt-launcher` pod.
 
 Use these checks side by side:
 
