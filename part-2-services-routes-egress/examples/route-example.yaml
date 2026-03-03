@@ -1,12 +1,12 @@
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
-  name: vm-web-route
+  name: vm-l2-a-route
   namespace: udn-test1
 spec:
   to:
     kind: Service
-    name: vm-web-service
+    name: vm-l2-a-service
   port:
     targetPort: http
   tls:

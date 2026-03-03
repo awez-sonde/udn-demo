@@ -1,35 +1,34 @@
 apiVersion: k8s.ovn.org/v1
 kind: EgressIP
 metadata:
-  name: egress-ip-vms
-  namespace: udn-test1
+  name: egress-ip-vm-l3-a
 spec:
   egressIPs:
-  - 192.168.100.100
+  - 192.168.1.100
   namespaceSelector:
     matchLabels:
-      egress: enabled
+      kubernetes.io/metadata.name: udn-test2
   podSelector:
     matchLabels:
-      app: web-server
+      kubevirt.io/domain: vm-l3-a
 
 ---
-apiVersion: network.openshift.io/v1
-kind: EgressNetworkPolicy
+apiVersion: k8s.ovn.org/v1
+kind: EgressFirewall
 metadata:
-  name: egress-policy
-  namespace: udn-test1
+  name: vm-l3-egress-firewall
+  namespace: udn-test2
 spec:
   egress:
-  # Allow access to specific DNS servers
+  # Allow specific DNS destination
   - to:
-      dnsName: "*.example.com"
+      dnsName: "api.example.com"
     type: Allow
-  # Allow access to specific IP ranges
+  # Allow a specific external resolver
   - to:
       cidrSelector: 8.8.8.8/32
     type: Allow
-  # Block everything else (default deny)
+  # Keep this rule last (first-match behavior)
   - to:
       cidrSelector: 0.0.0.0/0
     type: Deny

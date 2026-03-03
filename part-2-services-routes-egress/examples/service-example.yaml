@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: vm-web-service
+  name: vm-l2-a-service
   namespace: udn-test1
 spec:
   selector:
-    app: web-server
+    kubevirt.io/domain: vm-l2-a
   ports:
   - name: http
     port: 80

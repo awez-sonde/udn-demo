@@ -83,14 +83,14 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app: web-server
+      kubevirt.io/domain: vm-l2-a
   policyTypes:
   - Ingress
   ingress:
   - from:
     - podSelector:
         matchLabels:
-          app: client
+          kubevirt.io/domain: vm-l2-b
     ports:
     - protocol: TCP
       port: 80
@@ -107,7 +107,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app: web-server
+      kubevirt.io/domain: vm-l2-a
   policyTypes:
   - Ingress
   ingress:
@@ -131,7 +131,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app: web-server
+      kubevirt.io/domain: vm-l2-a
   policyTypes:
   - Ingress
   ingress:
@@ -156,7 +156,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app: web-server
+      kubevirt.io/domain: vm-l2-a
   policyTypes:
   - Ingress
   ingress:
@@ -164,7 +164,7 @@ spec:
   - from:
     - podSelector:
         matchLabels:
-          app: client
+          kubevirt.io/domain: vm-l2-b
     ports:
     - protocol: TCP
       port: 80
@@ -198,14 +198,14 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app: client
+      kubevirt.io/domain: vm-l2-b
   policyTypes:
   - Egress
   egress:
   - to:
     - podSelector:
         matchLabels:
-          app: database
+          kubevirt.io/domain: vm-l2-a
     ports:
     - protocol: TCP
       port: 5432
@@ -222,7 +222,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app: client
+      kubevirt.io/domain: vm-l2-b
   policyTypes:
   - Egress
   egress:
@@ -246,7 +246,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app: web-server
+      kubevirt.io/domain: vm-l2-a
   policyTypes:
   - Egress
   egress:
@@ -276,7 +276,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app: web-server
+      kubevirt.io/domain: vm-l2-a
   policyTypes:
   - Egress
   egress:
@@ -284,7 +284,7 @@ spec:
   - to:
     - podSelector:
         matchLabels:
-          app: database
+          kubevirt.io/domain: vm-l2-udn-bridged
     ports:
     - protocol: TCP
       port: 5432
@@ -311,44 +311,40 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: web-server-policy
+  name: vm-l2-a-policy
   namespace: udn-test1
 spec:
   podSelector:
     matchLabels:
-      app: web-server
+      kubevirt.io/domain: vm-l2-a
   policyTypes:
   - Ingress
   - Egress
   ingress:
-  # Allow HTTP from clients
+  # Allow SSH from vm-l2-b
   - from:
     - podSelector:
         matchLabels:
-          app: client
+          kubevirt.io/domain: vm-l2-b
     ports:
     - protocol: TCP
-      port: 80
-  # Allow HTTPS from anywhere in cluster
+      port: 22
+  # Allow HTTP from vm-l2-b
   - from:
-    - namespaceSelector: {}
+    - podSelector:
+        matchLabels:
+          kubevirt.io/domain: vm-l2-b
     ports:
     - protocol: TCP
-      port: 443
+      port: 8080
   egress:
-  # Allow to database
-  - to:
-    - podSelector:
-        matchLabels:
-          app: database
-    ports:
-    - protocol: TCP
-      port: 5432
   # Allow DNS
   - to:
     - namespaceSelector: {}
     ports:
     - protocol: UDP
+      port: 53
+    - protocol: TCP
       port: 53
   # Allow external HTTPS
   - to:
@@ -374,7 +370,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app: vm-udn-app
+      kubevirt.io/domain: vm-l2-a
   policyTypes:
   - Ingress
   - Egress
@@ -382,10 +378,10 @@ spec:
   - from:
     - podSelector:
         matchLabels:
-          app: client
+          kubevirt.io/domain: vm-l2-b
     ports:
     - protocol: TCP
-      port: 80
+      port: 22
   egress:
   - to:
     - ipBlock:
@@ -406,7 +402,7 @@ spec:
 kubectl get networkpolicies -n udn-test1
 
 # Get policy details
-kubectl describe networkpolicy web-server-policy -n udn-test1
+kubectl describe networkpolicy vm-l2-a-policy -n udn-test1
 ```
 
 ### Test Allowed Traffic
@@ -414,8 +410,8 @@ kubectl describe networkpolicy web-server-policy -n udn-test1
 ```bash
 # From allowed source pod
 kubectl run test-client --image=curlimages/curl --rm -it --restart=Never \
-  --labels="app=client" -n udn-test1 -- \
-  curl http://web-server-service:80
+  --labels="kubevirt.io/domain=vm-l2-b" -n udn-test1 -- \
+  curl http://vm-l2-a-service:80
 
 # Should succeed
 ```
@@ -426,7 +422,7 @@ kubectl run test-client --image=curlimages/curl --rm -it --restart=Never \
 # From blocked source pod
 kubectl run test-blocked --image=curlimages/curl --rm -it --restart=Never \
   --labels="app=blocked" -n udn-test1 -- \
-  curl http://web-server-service:80
+  curl http://vm-l2-a-service:80
 
 # Should fail or timeout
 ```
@@ -435,7 +431,7 @@ kubectl run test-blocked --image=curlimages/curl --rm -it --restart=Never \
 
 ```bash
 # Connect to VM
-virtctl console vm-web-server -n udn-test1
+virtctl console vm-l2-a -n udn-test1
 
 # Inside VM, test connectivity
 # Allowed connections should work

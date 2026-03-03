@@ -32,61 +32,44 @@ Create an EgressIP that defines the source IP and which pods/VMs should use it:
 apiVersion: k8s.ovn.org/v1
 kind: EgressIP
 metadata:
-  name: egress-ip-vms
-  namespace: udn-test1
+  name: egress-ip-vm-l3-a
 spec:
   egressIPs:
-  - 192.168.100.100
+  - 192.168.1.100
   namespaceSelector:
     matchLabels:
-      egress: enabled
+      kubernetes.io/metadata.name: udn-test2
   podSelector:
     matchLabels:
-      app: web-server
+      kubevirt.io/domain: vm-l3-a
 ```
 
-#### Step 2: Label Namespace
+#### Step 2: Ensure namespace and VM match selectors
 
-Label the namespace to enable egress:
+This example uses the built-in namespace label and existing VM labels from Part 1 validation:
 
 ```bash
-kubectl label namespace udn-test1 egress=enabled
+oc get ns udn-test2 --show-labels | grep kubernetes.io/metadata.name
+oc get vmi -n udn-test2 --show-labels
 ```
 
-#### Step 3: Label VM/Pod
-
-Label your VM to match the egress IP selector:
-
-```yaml
-apiVersion: kubevirt.io/v1
-kind: VirtualMachine
-metadata:
-  name: vm-web-server
-  namespace: udn-test1
-  labels:
-    app: web-server
-    egress: enabled
-spec:
-  # ... VM spec
-```
-
-#### Step 4: Apply Configuration
+#### Step 3: Apply configuration
 
 ```bash
-kubectl apply -f examples/egress-policy.yaml
+oc apply -f examples/egress-policy.yaml
 ```
 
 ### Verify Egress IP
 
 ```bash
 # Check egress IP status
-kubectl get egressip egress-ip-vms -n udn-test1
+oc get egressip egress-ip-vm-l3-a
 
 # Check egress IP assignment
-kubectl describe egressip egress-ip-vms -n udn-test1
+oc describe egressip egress-ip-vm-l3-a
 
 # Test from VM
-virtctl console vm-web-server -n udn-test1
+virtctl console vm-l3-a -n udn-test2
 # Inside VM:
 curl ifconfig.me  # Should show egress IP
 ```
@@ -110,13 +93,13 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: egress-router
-  namespace: udn-test1
+  namespace: udn-test2
   annotations:
     k8s.v1.cni.cncf.io/networks: |
       [
         {
           "name": "egress-network",
-          "namespace": "udn-test1"
+          "namespace": "udn-test2"
         }
       ]
 spec:
@@ -145,7 +128,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: egress-router-service
-  namespace: udn-test1
+  namespace: udn-test2
 spec:
   ports:
   - port: 8080
@@ -162,8 +145,8 @@ Update VM configuration to route traffic through egress router:
 apiVersion: kubevirt.io/v1
 kind: VirtualMachine
 metadata:
-  name: vm-web-server
-  namespace: udn-test1
+  name: vm-l3-a
+  namespace: udn-test2
 spec:
   template:
     spec:
@@ -177,21 +160,19 @@ Egress Network Policies (also called Egress Firewall) allow you to control which
 
 ### Configuration
 
-#### Step 1: Create EgressNetworkPolicy
+#### Step 1: Create EgressFirewall
 
 ```yaml
-apiVersion: network.openshift.io/v1
-kind: EgressNetworkPolicy
+apiVersion: k8s.ovn.org/v1
+kind: EgressFirewall
 metadata:
-  name: egress-policy
-  namespace: udn-test1
+  name: vm-l3-egress-firewall
+  namespace: udn-test2
 spec:
   egress:
-  # Allow access to specific DNS servers
   - to:
-      dnsName: "*.example.com"
+      dnsName: "api.example.com"
     type: Allow
-  # Allow access to specific IP ranges
   - to:
       cidrSelector: 8.8.8.8/32
     type: Allow
@@ -204,17 +185,17 @@ spec:
 #### Step 2: Apply Policy
 
 ```bash
-kubectl apply -f examples/egress-policy.yaml
+oc apply -f examples/egress-policy.yaml
 ```
 
 #### Step 3: Verify Policy
 
 ```bash
 # Check egress network policy
-kubectl get egressnetworkpolicy -n udn-test1
+oc get egressfirewall -n udn-test2
 
 # Get policy details
-kubectl describe egressnetworkpolicy egress-policy -n udn-test1
+oc describe egressfirewall vm-l3-egress-firewall -n udn-test2
 ```
 
 ### Policy Rules
@@ -257,20 +238,20 @@ kubectl describe egressnetworkpolicy egress-policy -n udn-test1
 
 ```bash
 # Connect to VM
-virtctl console vm-web-server -n udn-test1
+virtctl console vm-l3-a -n udn-test2
 
 # Inside VM, check source IP
 curl ifconfig.me
 curl ipinfo.io/ip
 
-# Should show the egress IP (192.168.100.100)
+# Should show the configured egress IP
 ```
 
 ### Test Egress Network Policy
 
 ```bash
 # Connect to VM
-virtctl console vm-web-server -n udn-test1
+virtctl console vm-l3-a -n udn-test2
 
 # Test allowed destination
 curl http://api.example.com
@@ -287,10 +268,10 @@ curl http://8.8.8.8
 
 ```bash
 # Check egress router pod
-kubectl get pods -n udn-test1 | grep egress-router
+kubectl get pods -n udn-test2 | grep egress-router
 
 # Check egress router logs
-kubectl logs egress-router -n udn-test1
+kubectl logs egress-router -n udn-test2
 
 # Test connectivity through router
 # (depends on router configuration)
@@ -305,7 +286,6 @@ apiVersion: k8s.ovn.org/v1
 kind: EgressIP
 metadata:
   name: egress-ip-multi
-  namespace: udn-test1
 spec:
   egressIPs:
   - 192.168.100.100
@@ -313,7 +293,7 @@ spec:
   - 192.168.100.102
   namespaceSelector:
     matchLabels:
-      egress: enabled
+      kubernetes.io/metadata.name: udn-test2
 ```
 
 ### Egress IP with Node Selector
@@ -323,7 +303,6 @@ apiVersion: k8s.ovn.org/v1
 kind: EgressIP
 metadata:
   name: egress-ip-node-specific
-  namespace: udn-test1
 spec:
   egressIPs:
   - 192.168.100.100
@@ -332,17 +311,17 @@ spec:
       node-role.kubernetes.io/worker: ""
   namespaceSelector:
     matchLabels:
-      egress: enabled
+      kubernetes.io/metadata.name: udn-test2
 ```
 
 ### Complex Egress Network Policy
 
 ```yaml
-apiVersion: network.openshift.io/v1
-kind: EgressNetworkPolicy
+apiVersion: k8s.ovn.org/v1
+kind: EgressFirewall
 metadata:
   name: complex-egress-policy
-  namespace: udn-test1
+  namespace: udn-test2
 spec:
   egress:
   # Allow DNS
@@ -377,7 +356,7 @@ spec:
    - Check node has egress IP capability
 
 2. **Egress policy not working**
-   - Verify EgressNetworkPolicy is applied
+   - Verify EgressFirewall is applied
    - Check policy rules are correct
    - Verify DNS names resolve correctly
    - Check for conflicting policies
@@ -401,14 +380,14 @@ spec:
 kubectl get egressip -A
 
 # Check egress network policies
-kubectl get egressnetworkpolicy -A
+oc get egressfirewall -A
 
 # Check node egress IP configuration
 oc get hostsubnet
 
 # Check egress router
-kubectl get pods -n udn-test1 | grep egress
-kubectl logs egress-router -n udn-test1
+kubectl get pods -n udn-test2 | grep egress
+kubectl logs egress-router -n udn-test2
 
 # Test connectivity from VM
 virtctl console <vm-name> -n <namespace>

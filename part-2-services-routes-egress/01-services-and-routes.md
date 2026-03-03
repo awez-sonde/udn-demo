@@ -24,10 +24,10 @@ First, ensure your VM has appropriate labels for service selection:
 apiVersion: kubevirt.io/v1
 kind: VirtualMachine
 metadata:
-  name: vm-web-server
+  name: vm-l2-a
   namespace: udn-test1
   labels:
-    app: web-server
+    kubevirt.io/domain: vm-l2-a
     version: v1
 spec:
   # ... VM spec
@@ -41,11 +41,11 @@ Create a service that targets your VM:
 apiVersion: v1
 kind: Service
 metadata:
-  name: vm-web-service
+  name: vm-l2-a-service
   namespace: udn-test1
 spec:
   selector:
-    app: web-server
+    kubevirt.io/domain: vm-l2-a
   ports:
   - name: http
     port: 80
@@ -68,13 +68,13 @@ kubectl apply -f examples/service-example.yaml
 
 ```bash
 # Check service
-kubectl get svc vm-web-service -n udn-test1
+kubectl get svc vm-l2-a-service -n udn-test1
 
 # Get service details
-kubectl describe svc vm-web-service -n udn-test1
+kubectl describe svc vm-l2-a-service -n udn-test1
 
 # Check endpoints
-kubectl get endpoints vm-web-service -n udn-test1
+kubectl get endpoints vm-l2-a-service -n udn-test1
 ```
 
 ## Services with UDN Networks
@@ -139,11 +139,11 @@ Ensure you have a service for your VM:
 apiVersion: v1
 kind: Service
 metadata:
-  name: vm-web-service
+  name: vm-l2-a-service
   namespace: udn-test1
 spec:
   selector:
-    app: web-server
+    kubevirt.io/domain: vm-l2-a
   ports:
   - port: 80
     targetPort: 8080
@@ -158,12 +158,12 @@ Create a route that exposes the service:
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
-  name: vm-web-route
+  name: vm-l2-a-route
   namespace: udn-test1
 spec:
   to:
     kind: Service
-    name: vm-web-service
+    name: vm-l2-a-service
   port:
     targetPort: http
   tls:
@@ -181,13 +181,13 @@ kubectl apply -f examples/route-example.yaml
 
 ```bash
 # Check route
-kubectl get route vm-web-route -n udn-test1
+kubectl get route vm-l2-a-route -n udn-test1
 
 # Get route details
-kubectl describe route vm-web-route -n udn-test1
+kubectl describe route vm-l2-a-route -n udn-test1
 
 # Get route hostname
-kubectl get route vm-web-route -n udn-test1 -o jsonpath='{.spec.host}'
+kubectl get route vm-l2-a-route -n udn-test1 -o jsonpath='{.spec.host}'
 ```
 
 ## Route Configurations
@@ -198,12 +198,12 @@ kubectl get route vm-web-route -n udn-test1 -o jsonpath='{.spec.host}'
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
-  name: vm-web-route-edge
+  name: vm-l2-a-route-edge
   namespace: udn-test1
 spec:
   to:
     kind: Service
-    name: vm-web-service
+    name: vm-l2-a-service
   port:
     targetPort: http
   tls:
@@ -225,12 +225,12 @@ spec:
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
-  name: vm-web-route-passthrough
+  name: vm-l2-a-route-passthrough
   namespace: udn-test1
 spec:
   to:
     kind: Service
-    name: vm-web-service
+    name: vm-l2-a-service
   port:
     targetPort: https
   tls:
@@ -243,12 +243,12 @@ spec:
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
-  name: vm-web-route-reencrypt
+  name: vm-l2-a-route-reencrypt
   namespace: udn-test1
 spec:
   to:
     kind: Service
-    name: vm-web-service
+    name: vm-l2-a-service
   port:
     targetPort: https
   tls:
@@ -267,21 +267,21 @@ spec:
 ```bash
 # From within the cluster
 # Get service cluster IP
-SVC_IP=$(kubectl get svc vm-web-service -n udn-test1 -o jsonpath='{.spec.clusterIP}')
+SVC_IP=$(kubectl get svc vm-l2-a-service -n udn-test1 -o jsonpath='{.spec.clusterIP}')
 
 # Test connectivity from a pod
 kubectl run test-pod --image=curlimages/curl --rm -it --restart=Never -- curl http://$SVC_IP:80
 
 # Or using service DNS name
 kubectl run test-pod --image=curlimages/curl --rm -it --restart=Never -- \
-  curl http://vm-web-service.udn-test1.svc.cluster.local:80
+  curl http://vm-l2-a-service.udn-test1.svc.cluster.local:80
 ```
 
 ### Test Route Connectivity
 
 ```bash
 # Get route hostname
-ROUTE_HOST=$(kubectl get route vm-web-route -n udn-test1 -o jsonpath='{.spec.host}')
+ROUTE_HOST=$(kubectl get route vm-l2-a-route -n udn-test1 -o jsonpath='{.spec.host}')
 
 # Test from external client
 curl http://$ROUTE_HOST
@@ -294,13 +294,13 @@ curl -k https://$ROUTE_HOST
 
 ```bash
 # Connect to VM
-virtctl console vm-web-server -n udn-test1
+virtctl console vm-l2-a -n udn-test1
 
 # Inside VM, test service connectivity
-curl http://vm-web-service.udn-test1.svc.cluster.local:80
+curl http://vm-l2-a-service.udn-test1.svc.cluster.local:80
 
 # Test route (if accessible from VM)
-curl http://vm-web-route-udn-test1.apps.example.com
+curl http://vm-l2-a-route-udn-test1.apps.example.com
 ```
 
 ## Advanced Service Configurations
@@ -311,11 +311,11 @@ curl http://vm-web-route-udn-test1.apps.example.com
 apiVersion: v1
 kind: Service
 metadata:
-  name: vm-web-service
+  name: vm-l2-a-service
   namespace: udn-test1
 spec:
   selector:
-    app: web-server
+    kubevirt.io/domain: vm-l2-a
   ports:
   - port: 80
     targetPort: 8080
@@ -331,11 +331,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: vm-web-service
+  name: vm-l2-a-service
   namespace: udn-test1
 spec:
   selector:
-    app: web-server
+    kubevirt.io/domain: vm-l2-a
   ports:
   - port: 80
     targetPort: 8080
@@ -349,11 +349,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: vm-web-service
+  name: vm-l2-a-service
   namespace: udn-test1
 spec:
   selector:
-    app: web-server
+    kubevirt.io/domain: vm-l2-a
   ports:
   - port: 80
     targetPort: 8080
@@ -391,19 +391,19 @@ spec:
 
 ```bash
 # Check service endpoints
-kubectl get endpoints vm-web-service -n udn-test1 -o yaml
+kubectl get endpoints vm-l2-a-service -n udn-test1 -o yaml
 
 # Check VM status
 kubectl get vmi -n udn-test1
 
 # Check route status
-kubectl describe route vm-web-route -n udn-test1
+kubectl describe route vm-l2-a-route -n udn-test1
 
 # Check router logs
 kubectl logs -n openshift-ingress -l ingresscontroller.operator.openshift.io/deployment-ingresscontroller=default
 
 # Test DNS resolution
-nslookup vm-web-service.udn-test1.svc.cluster.local
+nslookup vm-l2-a-service.udn-test1.svc.cluster.local
 
 # Check network policies
 kubectl get networkpolicies -n udn-test1
