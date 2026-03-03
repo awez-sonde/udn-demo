@@ -258,7 +258,24 @@ Practical interpretation for this demo:
 - In masquerade mode, traffic is NATed between guest NIC and pod-side UDN attachment, so the guest does not present the UDN IP directly.
 - In bridge mode, the VM NIC is bridged into the UDN path, so the guest gets and shows the UDN IP directly.
 
-### 2) Inter-UDN isolation validation (different UDNs, should fail)
+### 2) Layer3 intra-UDN validation (same Layer3 UDN, should pass)
+Example: two VMs in `udn-test2` on the same Layer3 UDN (`vm-l3-a`, `vm-l3-b`). These VMs use default masquerade mode.
+
+```bash
+# Create VMs
+oc apply -f part-1-udns/examples/vms-layer3-intra.yaml
+
+# Get VM interfaces and IPs
+oc get vmi -n udn-test2 -o wide
+
+# Open console to VM A and ping VM B
+virtctl console vm-l3-a -n udn-test2
+ping <vm-l3-b-ip-on-udn>
+```
+
+Expected result: ping succeeds.
+
+### 3) Inter-UDN isolation validation (different UDNs, should fail)
 Example: one VM in `udn-overlap-a` and one VM in `udn-overlap-b`, both using `10.220.0.0/16` (`vm-overlap-a`, `vm-overlap-b`).
 
 ```bash
@@ -275,7 +292,7 @@ ping <vm-overlap-b-ip-on-10.220.0.0/16>
 
 Expected result: ping fails, proving subnet overlap is safe when UDNs are isolated.
 
-### 3) CUDN validation (cross-namespace on same CUDN, should pass)
+### 4) CUDN validation (cross-namespace on same CUDN, should pass)
 Example: two VMs in different namespaces matched by the same `ClusterUserDefinedNetwork` (`vm-cudn-a` in `udn-test3`, `vm-cudn-b` in `udn-test4`).
 
 ```bash
@@ -296,7 +313,7 @@ ping <vm-cudn-b-ip-in-udn-test4>
 
 Expected result: ping succeeds.
 
-### 4) Localnet validation (underlay reachability)
+### 5) Localnet validation (underlay reachability)
 Example: VM attached to Localnet network (`vm-localnet-1`).
 
 ```bash
@@ -315,7 +332,7 @@ ping <known-underlay-host-ip>
 
 Expected result: VM can reach underlay targets allowed by your physical network policy.
 
-### 5) Quick status checks when validation fails
+### 6) Quick status checks when validation fails
 
 ```bash
 oc get userdefinednetwork -A
@@ -327,7 +344,7 @@ oc describe clusteruserdefinednetwork <name>
 
 Focus on `status.conditions` messages first; they usually show the root cause.
 
-### 6) One-shot demo setup (all validation resources)
+### 7) One-shot demo setup (all validation resources)
 
 ```bash
 oc apply -f part-1-udns/examples/all-validation-resources.yaml
@@ -341,6 +358,8 @@ Start them when needed:
 virtctl start vm-l2-a -n udn-test1
 virtctl start vm-l2-b -n udn-test1
 virtctl start vm-l2-udn-bridged -n udn-test1
+virtctl start vm-l3-a -n udn-test2
+virtctl start vm-l3-b -n udn-test2
 virtctl start vm-overlap-a -n udn-overlap-a
 virtctl start vm-overlap-b -n udn-overlap-b
 virtctl start vm-cudn-a -n udn-test3
@@ -348,7 +367,7 @@ virtctl start vm-cudn-b -n udn-test4
 virtctl start vm-localnet-1 -n udn-localnet-test
 ```
 
-### 7) Network-only bootstrap (no VMs)
+### 8) Network-only bootstrap (no VMs)
 
 ```bash
 oc apply -f part-1-udns/examples/all-network-bootstrap.yaml
@@ -356,7 +375,7 @@ oc apply -f part-1-udns/examples/all-network-bootstrap.yaml
 
 This applies only namespaces and UDN/CUDN resources, so you can add VMs later as needed.
 
-### 8) Cleanup after demo
+### 9) Cleanup after demo
 
 ```bash
 bash part-1-udns/examples/cleanup-validation.sh
